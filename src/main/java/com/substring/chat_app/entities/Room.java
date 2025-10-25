@@ -1,4 +1,4 @@
-package entities;
+package com.substring.chat_app.entities;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;

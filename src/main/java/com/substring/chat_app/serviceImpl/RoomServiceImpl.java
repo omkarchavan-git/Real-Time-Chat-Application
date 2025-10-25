@@ -1,12 +1,10 @@
-package serviceImpl;
+package com.substring.chat_app.serviceImpl;
 
-import entities.Room;
+import com.substring.chat_app.entities.Room;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import repositories.RoomRepository;
-import roomService.RoomService;
-
-import java.util.List;
+import com.substring.chat_app.repositories.RoomRepository;
+import com.substring.chat_app.roomService.RoomService;
 
 @Service
 public class RoomServiceImpl implements RoomService {
