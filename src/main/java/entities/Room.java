@@ -17,7 +17,7 @@ public class Room {
 
     @Id
     private long id;
-    private int roomid;
+    private String roomId;
     private List<Message> messages = new ArrayList<>();
 
 
