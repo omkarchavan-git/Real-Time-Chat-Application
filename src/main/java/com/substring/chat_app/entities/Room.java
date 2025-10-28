@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document(collation = "rooms")
+@Document(collection = "rooms")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,10 +16,33 @@ import java.util.List;
 public class Room {
 
     @Id
+
     private long id;
 
     private String roomId;
     private List<Message> messages = new ArrayList<>();
 
+    public long getId() {
+        return id;
+    }
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
+    }
+
+    public List<Message> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<Message> messages) {
+        this.messages = messages;
+    }
 }
