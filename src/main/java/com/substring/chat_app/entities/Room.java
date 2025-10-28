@@ -16,7 +16,6 @@ import java.util.List;
 public class Room {
 
     @Id
-
     private long id;
 
     private String roomId;
