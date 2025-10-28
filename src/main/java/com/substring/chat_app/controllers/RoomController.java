@@ -60,11 +60,9 @@ public class RoomController {
             return ResponseEntity.badRequest().build();
         }
 
-
         List<Message> messages = room.getMessages();
         return ResponseEntity.ok(messages);
 
     }
-
 
 }
