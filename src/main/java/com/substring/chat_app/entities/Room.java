@@ -16,18 +16,12 @@ import java.util.List;
 public class Room {
 
     @Id
-    private long id;
+    private String id;
 
     private String roomId;
     private List<Message> messages = new ArrayList<>();
 
-    public long getId() {
-        return id;
-    }
 
-    public void setId(long id) {
-        this.id = id;
-    }
 
     public String getRoomId() {
         return roomId;
