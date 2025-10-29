@@ -39,4 +39,5 @@ public class Message {
     }
 
     //constructor removed
+
 }
