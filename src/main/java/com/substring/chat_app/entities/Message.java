@@ -38,9 +38,5 @@ public class Message {
         this.timeStamp = timeStamp;
     }
 
-    public Message(String content, String sender) {
-        this.content = content;
-        this.sender = sender;
-        this.timeStamp = LocalDateTime.now();
-    }
+    //constructor removed
 }
