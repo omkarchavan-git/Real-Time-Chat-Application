@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 
 let stompClient = null;
 
 const ChatRoom = () => {
+  const { roomId } = useParams();
   const [connected, setConnected] = useState(false);
+  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [username, setUsername] = useState("");
-  const [roomId, setRoomId] = useState("room1");
 
   const connect = () => {
-    const socket = new SockJS("http://localhost:8080/chat");
+    const socket = new SockJS("http://localhost:8081/chat");
     stompClient = over(socket);
-
     stompClient.connect({}, () => {
       setConnected(true);
       console.log("Connected to WebSocket");
 
-      // Subscribe to room topic
       stompClient.subscribe(`/topic/room/${roomId}`, (msg) => {
         const receivedMessage = JSON.parse(msg.body);
         setMessages((prev) => [...prev, receivedMessage]);
@@ -34,15 +33,14 @@ const ChatRoom = () => {
         content: message,
         roomId: roomId,
       };
-
       stompClient.send(`/app/sendMessage/${roomId}`, {}, JSON.stringify(msgObj));
       setMessage("");
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>🗨️ Group Chat - {roomId}</h2>
+    <div>
+      <h2>Room: {roomId}</h2>
 
       {!connected ? (
         <div>
@@ -51,7 +49,7 @@ const ChatRoom = () => {
             placeholder="Enter your name"
             onChange={(e) => setUsername(e.target.value)}
           />
-          <button onClick={connect}>Join Chat</button>
+          <button onClick={connect}>Join Room</button>
         </div>
       ) : (
         <div>
@@ -68,7 +66,7 @@ const ChatRoom = () => {
           >
             {messages.map((msg, index) => (
               <div key={index}>
-                <strong>{msg.sender}: </strong> {msg.content}
+                <strong>{msg.sender}:</strong> {msg.content}
               </div>
             ))}
           </div>
