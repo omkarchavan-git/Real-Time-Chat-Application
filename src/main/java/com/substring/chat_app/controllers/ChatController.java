@@ -28,8 +28,7 @@ public class ChatController {
     //to send and receive messages
     @MessageMapping("/sendMessage/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public Message sendMessage( @DestinationVariable String roomId,
-                                @RequestBody MessageRequest request) {
+    public Message sendMessage(@DestinationVariable String roomId, MessageRequest request) {
 
         Room room = roomService.findByRoomId(request.getRoomId());
         Message message = new Message();
@@ -37,14 +36,14 @@ public class ChatController {
         message.setSender(request.getSender());
         message.setTimeStamp(LocalDateTime.now());
 
-        if (room != null)
-        {
+        if (room != null) {
             room.getMessages().add(message);
             roomRepository.save(room);
+        } else {
+            throw new RuntimeException("Room not found!");
         }
-        else {
-            throw new RuntimeException("Room not found !");
-        }
+
         return message;
     }
+
 }
