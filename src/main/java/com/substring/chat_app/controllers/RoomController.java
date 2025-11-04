@@ -21,6 +21,14 @@ public class RoomController {
     @Autowired
     private RoomRepository roomRepository;
 
+
+    //get all room
+    @GetMapping("/all")
+    public ResponseEntity<List<Room>> getAllRooms() {
+        List<Room> rooms = roomRepository.findAll();
+        return ResponseEntity.ok(rooms);
+    }
+
     //create room
     @PostMapping()
     public ResponseEntity<?> createRoom(@RequestBody String roomId){
