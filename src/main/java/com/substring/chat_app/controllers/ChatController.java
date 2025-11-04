@@ -8,19 +8,14 @@ import com.substring.chat_app.roomService.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.time.LocalDateTime;
 
-
-@CrossOrigin(origins = "http://localhost:5173/")
-
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/rooms")
 public class ChatController {
 
     @Autowired
@@ -29,25 +24,23 @@ public class ChatController {
     @Autowired
     private RoomRepository roomRepository;
 
-    //to send and receive messages
     @MessageMapping("/sendMessage/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public Message sendMessage(@DestinationVariable String roomId, MessageRequest request) {
+    public Message sendMessage(@DestinationVariable String roomId, @Payload MessageRequest request) {
 
         Room room = roomService.findByRoomId(request.getRoomId());
+        if (room == null) {
+            throw new RuntimeException("Room not found!");
+        }
+
         Message message = new Message();
         message.setContent(request.getContent());
         message.setSender(request.getSender());
         message.setTimeStamp(LocalDateTime.now());
 
-        if (room != null) {
-            room.getMessages().add(message);
-            roomRepository.save(room);
-        } else {
-            throw new RuntimeException("Room not found!");
-        }
+        room.getMessages().add(message);
+        roomRepository.save(room);
 
         return message;
     }
-
 }
