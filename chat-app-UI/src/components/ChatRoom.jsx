@@ -1,48 +1,58 @@
 import React, { useEffect, useState } from "react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
-import { useNavigate } from "react-router-dom";
-import "../styles/ChatRoom.css"; 
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import "../styles/chatroom.css";
 
 let stompClient = null;
 
 function ChatRoom() {
+  const navigate = useNavigate();
+  const { roomId } = useParams();
+  const location = useLocation();
+  const passedUsername = location.state?.username || "Anonymous";
+
   const [connected, setConnected] = useState(false);
+  const [sender] = useState(passedUsername);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [roomId, setRoomId] = useState("room1");
-  const [sender, setSender] = useState("Omkar");
-  const navigate = useNavigate();
 
-  // Connect WebSocket
   useEffect(() => {
+    // Fetch history first
+    fetch(`http://localhost:8081/api/rooms/${encodeURIComponent(roomId)}/messages`)
+      .then((res) => {
+        if (!res.ok) return [];
+        return res.json();
+      })
+      .then((data) => setMessages(data))
+      .catch(() => {});
+
+    // Connect to websocket
     const socket = new SockJS("http://localhost:8081/chat");
     stompClient = over(socket);
-    stompClient.connect({}, onConnected, onError);
-  }, []);
+    stompClient.connect({}, () => {
+      setTimeout(() => {
+        setConnected(true);
+        stompClient.subscribe(`/topic/room/${roomId}`, onMessageReceived);
+      }, 300);
+    }, (err) => console.error(err));
 
-  const onConnected = () => {
-    setConnected(true);
-    stompClient.subscribe(`/topic/room/${roomId}`, onMessageReceived);
-    console.log("Connected to room:", roomId);
-  };
-
-  const onError = (error) => {
-    console.error("Connection error:", error);
-  };
+    return () => {
+      try {
+        if (stompClient && stompClient.disconnect) stompClient.disconnect();
+      } catch (e) {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
 
   const onMessageReceived = (payload) => {
-    const message = JSON.parse(payload.body);
-    setMessages((prev) => [...prev, message]);
+    const msg = JSON.parse(payload.body);
+    setMessages((prev) => [...prev, msg]);
   };
 
   const sendMessage = () => {
-    if (stompClient && message.trim() !== "") {
-      const chatMessage = {
-        sender: sender,
-        content: message,
-        roomId: roomId,
-      };
+    if (stompClient && connected && message.trim() !== "") {
+      const chatMessage = { sender, content: message, roomId };
       stompClient.send(`/app/sendMessage/${roomId}`, {}, JSON.stringify(chatMessage));
       setMessage("");
     }
@@ -54,23 +64,24 @@ function ChatRoom() {
         ⬅ Back to Dashboard
       </button>
 
-      <h2>Room ID: {roomId}</h2>
-      <h3>Status: {connected ? "🟢 Connected" : "🔴 Disconnected"}</h3>
+      <h2>Room: {roomId}</h2>
+      <h4>User: {sender}</h4>
+      <h5>Status: {connected ? "🟢 Connected" : "🔴 Disconnected"}</h5>
 
       <div className="chat-box">
-        {messages.map((msg, index) => (
-          <div key={index}>
-            <strong>{msg.sender}:</strong> {msg.content}
+        {messages.length === 0 ? <p>No messages yet.</p> : messages.map((m, idx) => (
+          <div key={idx} className="chat-message">
+            <strong>{m.sender}:</strong> {m.content}
           </div>
         ))}
       </div>
 
       <div className="chat-input">
         <input
-          type="text"
-          placeholder="Type message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type message..."
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
         <button onClick={sendMessage}>Send</button>
       </div>
