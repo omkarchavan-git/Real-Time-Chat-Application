@@ -1,0 +1,47 @@
+.dashboard-container {
+  text-align: center;
+  margin-top: 100px;
+  font-family: "Poppins", sans-serif;
+}
+
+h2 {
+  color: #333;
+}
+
+input {
+  padding: 8px;
+  width: 250px;
+  margin: 10px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+
+button {
+  background-color: #ff5e42;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #ff7849;
+}
+
+.room-list {
+  margin-top: 30px;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.room-item {
+  background-color: #f3f3f3;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
