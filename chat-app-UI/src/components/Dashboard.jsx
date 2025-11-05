@@ -4,145 +4,119 @@ import "../styles/dashboard.css";
 
 const API = "http://localhost:8081";
 
-function Dashboard() {
-  const [rooms, setRooms] = useState([]);
+export default function Dashboard() {
+  const [name, setName] = useState("");
   const [roomIdInput, setRoomIdInput] = useState("");
-  const [username, setUsername] = useState("");
+  const [joinRoomInput, setJoinRoomInput] = useState("");
+  const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
- useEffect(() => {
-  
-  const fetchRooms = async () => {
-    try {
-      const res = await fetch(`${API}/api/rooms/all`);
-      if (res.ok) {
-        const data = await res.json();
-        setRooms(data);
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await fetch(`${API}/api/rooms/all`);
+        if (res.ok) {
+          const data = await res.json();
+          // ✅ show newest first & limit to 10
+          const sorted = [...data].reverse().slice(0, 10);
+          setRooms(sorted);
+        }
+      } catch (err) {
+        console.error("Error fetching rooms:", err);
       }
+    };
+    fetchRooms();
+  }, []);
+
+  const createRoom = async () => {
+    const newRoomId =
+      roomIdInput.trim() || `room-${Date.now().toString(36).slice(-6)}`;
+    try {
+      const res = await fetch(`${API}/api/rooms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId: newRoomId }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        alert("Room creation failed: " + text);
+        return;
+      }
+
+      const created = await res.json();
+      alert(`Room created: ${created.roomId}`);
+
+      setRooms((prev) => [{ roomId: created.roomId }, ...prev].slice(0, 10));
+      setRoomIdInput("");
     } catch (err) {
-      console.error("Error fetching rooms:", err);
+      console.error(err);
+      alert("Error creating room");
     }
   };
 
-  fetchRooms();
-  fetch("http://localhost:8081/api/rooms")
-    .then(res => res.json())
-    .then(data => setRooms(data))
-    .catch(err => console.error(err));
-}, []);
-
-const createRoom = async () => {
-  const newRoomId =
-    roomIdInput.trim() || `room-${Date.now().toString(36).slice(-6)}`;
-
-  try {
-    const res = await fetch(`${API}/api/rooms`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomId: newRoomId }), // ✅ send as JSON object
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      alert("Create room failed: " + text);
+  const joinRoom = (id) => {
+    if (!name.trim()) {
+      alert("Please enter your name before joining a room!");
       return;
     }
-
-    const created = await res.json();
-    alert(`Room created: ${created.roomId}`);
-
-    //  Update the room list locally
-    setRooms((prev) => [...prev, created]);
-
-     
-    localStorage.setItem(
-      "rooms",
-      JSON.stringify([...rooms, created])
-    );
-
-    setRoomIdInput("");
-  } catch (err) {
-    console.error(err);
-    alert("Error creating room");
-  }
-};
-
-
-
-  const joinRoom = async (targetRoomId) => {
-    const idToCheck = targetRoomId || roomIdInput.trim();
-    if (!username.trim()) return alert("Enter your name first");
-    if (!idToCheck) return alert("Enter or select a Room ID to join");
-
-    try {
-      const res = await fetch(`${API}/api/rooms/${encodeURIComponent(idToCheck)}`);
-      if (!res.ok) {
-        const text = await res.text();
-        alert("Room not found: " + text);
-        return;
-      }
-      const room = await res.json();
-      // Navigate to chat and pass username via state
-      navigate(`/chat/${idToCheck}`, { state: { username } });
-    } catch (err) {
-      console.error(err);
-      alert("Error joining room");
-    }
+    navigate(`/chat/${id}?user=${encodeURIComponent(name)}`);
   };
 
   return (
     <div className="dashboard-container">
-      <h2>Substring Chat — Dashboard</h2>
+      <h2 className="dashboard-title">💬 Substring Chat — Dashboard</h2>
 
-      <div className="username-row">
+      <div className="input-section">
         <input
           type="text"
           placeholder="Your name (required)"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="input-field"
         />
+
+        <div className="room-actions">
+          <input
+            type="text"
+            placeholder="Enter room id (or leave blank to auto-generate)"
+            value={roomIdInput}
+            onChange={(e) => setRoomIdInput(e.target.value)}
+            className="input-field"
+          />
+          <button onClick={createRoom} className="btn create">
+            + Create Room
+          </button>
+        </div>
+
+        <div className="room-actions">
+          <input
+            type="text"
+            placeholder="Enter room id to join"
+            value={joinRoomInput}
+            onChange={(e) => setJoinRoomInput(e.target.value)}
+            className="input-field"
+          />
+          <button onClick={() => joinRoom(joinRoomInput)} className="btn join">
+            🔗 Join Room
+          </button>
+        </div>
       </div>
 
-      <div className="create-row">
-        <input
-          type="text"
-          placeholder="Enter room id (or leave blank to auto-generate)"
-          value={roomIdInput}
-          onChange={(e) => setRoomIdInput(e.target.value)}
-        />
-        <button onClick={createRoom}>Create Room</button>
-      </div>
-
-      <div className="join-row">
-        <input
-          type="text"
-          placeholder="Enter room id to join"
-          value={roomIdInput}
-          onChange={(e) => setRoomIdInput(e.target.value)}
-        />
-        <button onClick={() => joinRoom()}>Join Room</button>
-      </div>
-
+      <h3 className="room-list-title">🕒 Recent Rooms</h3>
       <div className="room-list">
-        <h3>Available Rooms</h3>
         {rooms.length === 0 ? (
-          <p>No rooms available yet.</p>
+          <p className="no-room">No rooms available yet.</p>
         ) : (
-          rooms.map((room, idx) => (
-            <div className="room-item" key={idx}>
-              <span>{room.roomId}</span>
-              <div>
-                <button
-                  onClick={() => {
-                    // fill input for convenience and join
-                    setRoomIdInput(room.roomId);
-                    // call join after small timeout to allow username check
-                    setTimeout(() => joinRoom(room.roomId), 50);
-                  }}
-                >
-                  Join
-                </button>
-              </div>
+          rooms.map((r, index) => (
+            <div key={index} className="room-card">
+              <span className="room-name">{r.roomId}</span>
+              <button
+                onClick={() => joinRoom(r.roomId)}
+                className="btn join-small"
+              >
+                Join
+              </button>
             </div>
           ))
         )}
@@ -151,4 +125,4 @@ const createRoom = async () => {
   );
 }
 
-export default Dashboard;
+ 
