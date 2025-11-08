@@ -26,18 +26,14 @@ public class RoomController {
     @Autowired
     private RoomRepository roomRepository;
 
-    /**
-     * ✅ Get all rooms
-     */
+    /** Get all rooms */
     @GetMapping("/all")
     public ResponseEntity<List<Room>> getAllRooms() {
         List<Room> rooms = roomRepository.findAll();
         return ResponseEntity.ok(rooms);
     }
 
-    /**
-     * ✅ Create a new room (Fix for malformed roomId)
-     */
+    /** Create a new room (Fix for malformed roomId             */
     @PostMapping
     public ResponseEntity<?> createRoom(@RequestBody Map<String, Object> body) {
         // Extract the clean roomId value
@@ -76,9 +72,9 @@ public class RoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * ✅ Join an existing room
-     */
+
+//      Join an existing room
+
     @GetMapping("/{roomId}")
     public ResponseEntity<?> joinRoom(@PathVariable String roomId) {
         Room room = roomRepository.findByRoomId(roomId);
@@ -90,7 +86,7 @@ public class RoomController {
     }
 
     /**
-     * ✅ Get all messages for a room
+     Get all messages for a room
      */
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<?> getMessages(@PathVariable String roomId) {
