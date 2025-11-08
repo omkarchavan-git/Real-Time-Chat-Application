@@ -7,8 +7,6 @@ import "../styles/ChatRoom.css";
 let stompClient = null;
 
 const ChatRoom = () => {
-
-
   const location = useLocation();
   const navigate = useNavigate();
   const { roomId: roomIdParam } = useParams();
@@ -19,17 +17,14 @@ const ChatRoom = () => {
   const username = location.state?.username || storedUsername;
   const roomId = location.state?.roomId || storedRoom;
 
-  
+  // 🧹 Clean and normalize room ID
   const rawRoom = roomId || roomIdParam || "";
-
-// Remove unwanted parts like 'roomId', braces, quotes, or slashes
-const activeRoom = String(
-  typeof rawRoom === "object" ? rawRoom.roomId : rawRoom
-)
-  .replace(/roomId|[\/\[\]\{\}"':]/g, "")
-  .replace(/^room/, "room") // keep correct prefix
-  .trim();
-
+  const activeRoom = String(
+    typeof rawRoom === "object" ? rawRoom.roomId : rawRoom
+  )
+    .replace(/roomId|[\/\[\]\{\}"':]/g, "")
+    .replace(/^room/, "room")
+    .trim();
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -43,29 +38,51 @@ const activeRoom = String(
       return;
     }
 
+    // 🟢 STEP 1: Fetch old messages
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:8081/api/rooms/${activeRoom}/messages`
+        );
+        if (res.ok) {
+          const oldMessages = await res.json();
+          console.log("📜 Loaded old messages:", oldMessages);
+          setMessages(oldMessages);
+        } else {
+          console.error("Failed to load previous messages");
+        }
+      } catch (err) {
+        console.error("Error fetching messages:", err);
+      }
+    };
+
+    fetchMessages();
+
+    // 🟢 STEP 2: Connect to WebSocket
     const socket = new SockJS("http://localhost:8081/chat");
     stompClient = over(socket);
 
     stompClient.connect({}, () => {
       console.log(`✅ Connected to WebSocket for room: ${activeRoom}`);
 
-      // Correct subscription topic
       stompClient.subscribe(`/topic/room/${activeRoom}`, (payload) => {
         const receivedMsg = JSON.parse(payload.body);
-        console.log("📩 Message received:", receivedMsg);
+        console.log("📩 New message received:", receivedMsg);
         setMessages((prev) => [...prev, receivedMsg]);
       });
     });
 
+    // 🧹 Cleanup on component unmount
     return () => {
       if (stompClient && stompClient.connected) {
         stompClient.disconnect(() => {
-          console.log("Disconnected from WebSocket");
+          console.log("🔌 Disconnected from WebSocket");
         });
       }
     };
   }, [activeRoom, username, navigate]);
 
+  // 🟣 Send a new message
   const sendMessage = () => {
     if (!message.trim()) return;
 
@@ -75,13 +92,10 @@ const activeRoom = String(
       roomId: activeRoom,
     };
 
-    console.log("🚀 Sending message to:", `/app/sendMessage/${activeRoom}`, msg);
+    console.log("🚀 Sending message:", msg);
     stompClient.send(`/app/sendMessage/${activeRoom}`, {}, JSON.stringify(msg));
     setMessage("");
-    console.log("🧩 Cleaned room ID:", activeRoom);
-
   };
-console.log("🧩 Cleaned room ID:", activeRoom);
 
   return (
     <div className="chatroom-container">
@@ -93,16 +107,20 @@ console.log("🧩 Cleaned room ID:", activeRoom);
       </div>
 
       <div className="chat-box">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`chat-message ${
-              msg.sender === username ? "self" : "other"
-            }`}
-          >
-            <b>{msg.sender}:</b> {msg.content}
-          </div>
-        ))}
+        {messages.length === 0 ? (
+          <p className="no-messages">No messages yet...</p>
+        ) : (
+          messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`chat-message ${
+                msg.sender === username ? "self" : "other"
+              }`}
+            >
+              <b>{msg.sender}:</b> {msg.content}
+            </div>
+          ))
+        )}
       </div>
 
       <div className="chat-input">
