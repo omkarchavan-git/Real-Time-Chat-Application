@@ -17,7 +17,7 @@ const ChatRoom = () => {
   const username = location.state?.username || storedUsername;
   const roomId = location.state?.roomId || storedRoom;
 
-  // 🧹 Clean and normalize room ID
+
   const rawRoom = roomId || roomIdParam || "";
   const activeRoom = String(
     typeof rawRoom === "object" ? rawRoom.roomId : rawRoom
@@ -38,7 +38,7 @@ const ChatRoom = () => {
       return;
     }
 
-    // 🟢 STEP 1: Fetch old messages
+    //  Fetch old messages
     const fetchMessages = async () => {
       try {
         const res = await fetch(
@@ -58,7 +58,7 @@ const ChatRoom = () => {
 
     fetchMessages();
 
-    // 🟢 STEP 2: Connect to WebSocket
+    //  Connect to WebSocket
     const socket = new SockJS("http://localhost:8081/chat");
     stompClient = over(socket);
 
@@ -72,7 +72,7 @@ const ChatRoom = () => {
       });
     });
 
-    // 🧹 Cleanup on component unmount
+
     return () => {
       if (stompClient && stompClient.connected) {
         stompClient.disconnect(() => {
@@ -82,7 +82,7 @@ const ChatRoom = () => {
     };
   }, [activeRoom, username, navigate]);
 
-  // 🟣 Send a new message
+  //  Send a new message
   const sendMessage = () => {
     if (!message.trim()) return;
 
