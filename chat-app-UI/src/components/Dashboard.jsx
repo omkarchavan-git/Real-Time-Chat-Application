@@ -62,7 +62,7 @@ export default function Dashboard() {
     }
     localStorage.setItem("username", name);
     localStorage.setItem("roomId", id);
-    navigate(`/chat/${id}`);
+    navigate(`/chat/${id}`, {state : {username : name, roomId : id }});
    // navigate(`/chat/${id}?user=${encodeURIComponent(name)}`);
   };
 
@@ -104,7 +104,7 @@ export default function Dashboard() {
             🔗 Join Room
           </button>
         </div>
-      </div>
+      </div>  
 
       <h3 className="room-list-title">🕒 Recent Rooms</h3>
       <div className="room-list">
