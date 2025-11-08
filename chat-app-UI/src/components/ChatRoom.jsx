@@ -10,7 +10,12 @@ const ChatRoom = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { roomId: roomIdParam } = useParams();
-  const { username, roomId } = location.state || {};
+
+  const storedUsername = localStorage.getItem("username");
+  const storedRoom = localStorage.getItem("roomId");
+
+  const username = location.state?.username || storedUsername;
+  const roomId = location.state?.roomId || storedRoom;
   const activeRoom = roomId || roomIdParam;
 
   const [message, setMessage] = useState("");
@@ -18,6 +23,7 @@ const ChatRoom = () => {
 
   useEffect(() => {
     if (!activeRoom || !username) {
+
       console.warn("Missing room or username, redirecting to dashboard...");
       navigate("/");
       return;
@@ -69,9 +75,8 @@ const ChatRoom = () => {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`chat-message ${
-              msg.sender === username ? "self" : "other"
-            }`}
+            className={`chat-message ${msg.sender === username ? "self" : "other"
+              }`}
           >
             <b>{msg.sender}:</b> {msg.content}
           </div>
