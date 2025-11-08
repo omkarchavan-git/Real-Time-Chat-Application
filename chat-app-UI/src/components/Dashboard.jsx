@@ -11,13 +11,13 @@ export default function Dashboard() {
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
+  // ✅ Fetch recent rooms
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const res = await fetch(`${API}/api/rooms/all`);
         if (res.ok) {
           const data = await res.json();
-          // show newest first & limit to 10
           const sorted = [...data].reverse().slice(0, 5);
           setRooms(sorted);
         }
@@ -28,6 +28,7 @@ export default function Dashboard() {
     fetchRooms();
   }, []);
 
+  // ✅ Create room
   const createRoom = async () => {
     const newRoomId =
       roomIdInput.trim() || `room-${Date.now().toString(36).slice(-6)}`;
@@ -38,16 +39,14 @@ export default function Dashboard() {
         body: JSON.stringify({ roomId: newRoomId }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const text = await res.text();
-        alert("Room creation failed: " + text);
+        alert("❌ " + (data.error || "Room creation failed"));
         return;
       }
 
-      const created = await res.json();
-      alert(`Room created: ${created.roomId}`);
-
-      setRooms((prev) => [{ roomId: created.roomId }, ...prev].slice(0, 10));
+      alert(`✅ Room created: ${data.roomId}`);
+      setRooms((prev) => [{ roomId: data.roomId }, ...prev].slice(0, 10));
       setRoomIdInput("");
     } catch (err) {
       console.error(err);
@@ -55,15 +54,29 @@ export default function Dashboard() {
     }
   };
 
+  // ✅ Join room
   const joinRoom = (id) => {
     if (!name.trim()) {
       alert("Please enter your name before joining a room!");
       return;
     }
+
+    const room = typeof id === "object" ? id.roomId : id;
+    const cleanRoom = String(room).replace(/roomId/g, "").replace(/[{}"]/g, "").trim();
+
+    console.log("Joining clean room:", cleanRoom);
+
     localStorage.setItem("username", name);
-    localStorage.setItem("roomId", id);
-    navigate(`/chat/${id}`, {state : {username : name, roomId : id }});
-   // navigate(`/chat/${id}?user=${encodeURIComponent(name)}`);
+    localStorage.setItem("roomId", cleanRoom);
+    navigate(`/chat/${cleanRoom}`, { state: { username: name, roomId: cleanRoom } });
+  };
+
+  // ✅ Extract room name safely
+  const getRoomName = (r) => {
+    if (!r) return "Unknown";
+    if (typeof r === "string") return r;
+    if (typeof r === "object" && r.roomId) return r.roomId;
+    return JSON.stringify(r);
   };
 
   return (
@@ -104,28 +117,26 @@ export default function Dashboard() {
             🔗 Join Room
           </button>
         </div>
-      </div>  
+      </div>
 
       <h3 className="room-list-title">🕒 Recent Rooms</h3>
       <div className="room-list">
         {rooms.length === 0 ? (
           <p className="no-room">No rooms available yet.</p>
         ) : (
-          rooms.map((r, index) => (
-            <div key={index} className="room-card">
-              <span className="room-name">Room : {r.roomId.replace("roomId","").replace(/[":{}]/g, "").trim()}</span>
-              <button
-                onClick={() => joinRoom(r.roomId)}
-                className="btn join-small"
-              >
-                Join
-              </button>
-            </div>
-          ))
+          rooms.map((r, index) => {
+            const roomName = getRoomName(r).replace("roomId", "").replace(/[{}"]/g, "").trim();
+            return (
+              <div key={index} className="room-card">
+                <span className="room-name">Room: {roomName}</span>
+                <button onClick={() => joinRoom(roomName)} className="btn join-small">
+                  Join
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
   );
 }
-
-
