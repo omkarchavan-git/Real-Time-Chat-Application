@@ -26,6 +26,7 @@ const ChatRoom = () => {
 
       console.warn("Missing room or username, redirecting to dashboard...");
       navigate("/");
+      console.log("Room:", activeRoom, "Username:", username);
       return;
     }
 
@@ -65,7 +66,7 @@ const ChatRoom = () => {
   return (
     <div className="chatroom-container">
       <div className="chatroom-header">
-        <h3>Room: {activeRoom}</h3>
+        <h3>Room: {activeRoom.replace(/[":{}]/g, "").replace("roomId", "")}</h3>
         <button className="back-btn" onClick={() => navigate("/")}>
           Back to Dashboard
         </button>
