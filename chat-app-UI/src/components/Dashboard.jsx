@@ -17,8 +17,8 @@ export default function Dashboard() {
         const res = await fetch(`${API}/api/rooms/all`);
         if (res.ok) {
           const data = await res.json();
-          // ✅ show newest first & limit to 10
-          const sorted = [...data].reverse().slice(0, 10);
+          // show newest first & limit to 10
+          const sorted = [...data].reverse().slice(0, 5);
           setRooms(sorted);
         }
       } catch (err) {
@@ -60,7 +60,10 @@ export default function Dashboard() {
       alert("Please enter your name before joining a room!");
       return;
     }
-    navigate(`/chat/${id}?user=${encodeURIComponent(name)}`);
+    localStorage.setItem("username", name);
+    localStorage.setItem("roomId", id);
+    navigate(`/chat/${id}`);
+   // navigate(`/chat/${id}?user=${encodeURIComponent(name)}`);
   };
 
   return (
@@ -110,7 +113,7 @@ export default function Dashboard() {
         ) : (
           rooms.map((r, index) => (
             <div key={index} className="room-card">
-              <span className="room-name">{r.roomId}</span>
+              <span className="room-name">Room : {r.roomId.replace("roomId","").replace(/[":{}]/g, "").trim()}</span>
               <button
                 onClick={() => joinRoom(r.roomId)}
                 className="btn join-small"
@@ -125,4 +128,4 @@ export default function Dashboard() {
   );
 }
 
- 
+
